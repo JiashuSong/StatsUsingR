@@ -1,0 +1,224 @@
+---
+title: "Introduction to Data Analytics 2"
+author: "Ying Song"
+date: '`r Sys.Date()`'
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part 1: Experiment Design
+
+*Title*: Consumer Pseudo-Showrooming and Omni-Channel Product Placement Strategies
+
+*Abstract*: Recent advances in information technologies (IT) have powered the merger of online and offline retail channels into one single platform. Modern consumers frequently switch between online and offline channels when they navigate through various stages of the decision journey, motivating multichannel sellers to develop omni-channel strategies that optimize their overall profit. This study examines consumers' cross-channel search behavior of "pseudo-showrooming," or the consumer behavior of inspecting one product at a seller's physical store before buying a related but different product at the same seller’s online store, and investigates how such consumer behavior allows a multichannel seller to aachieve better coordination between its online and offline arms through optimal product placement strategies.
+
+Participants in the study were grouped into the following categories: 
+
+  - Where_bought: Where they ended up purchasing an item: bought at the store, bought online. 
+  - Who_bought: If they bought from the same or a different retailer. 
+
+Each participant was then measured on:
+
+  - Money: how much money they spent in dollars on the product.
+  - Time: how much time (in minutes) they spent looking at the product online. 
+
+1)	What would be one possible null hypothesis based on this study?
+    The Pseudo-showrooming strategy can benefit the firm's profit more from selling online exculusive items than dual-channel selling items. 
+
+2)	What would be one possible alternative hypothesis based on this study?
+    The cross-channel production selling can benefit the firm's profit more than Pseduo-showrooming strategy. 
+    
+3)	Who are they sampling in this study?
+    The customers who bought productions.
+
+4)	Who is the intended population in this study?
+    The customers who are cross-platform buyers.
+
+5)	Give an example of type 1 error based on this study (do not just define, explain in context how it might have happened here).
+    type 1 error: The psedo-showrooming startege does helful for firm to make more profit from online exculisve items but the experiment reject the null hypothesis by mistake. so called false positive. It may cause by the sample bias, for example the sample buyers are more older generation who prefer offline purchases. 
+    
+6)	Give an example of type 2 error based on this study (do not just define, explain in context how it might have happened here).
+    type 2 error: The psedo-showrooming startege does not helful for firm to make more profit from online exculisve items but the experiment failed to reject the null hypothesis. so called false negative. This type 2 error may cause by the sample bias which more frequently online buyers are selected. 
+
+# Part 2: Use the 04_data.csv to complete this portion.
+
+```{r import-data}
+df <- read.csv(file="04_data.csv",header=TRUE,sep=",")
+head(df, n=5)
+```
+
+1)	For each IV list the levels (next to a, b):
+
+    a.	Where bought: online, store
+
+    b.	Who bought: same, different
+    
+2)	What are the conditions in this experiment?
+    A, online buy, same retailer
+    B, online buy, different retailer
+    C, store buy, same retailer
+    D, store buy, differnet retailer 
+
+3)	For each condition list the means, standard deviations, and standard error for the conditions for time and money spent. Please note that means you should have several sets of M, SD, and SE. Be sure you name the sets of means, sd, and se different things so you can use them later.
+
+```{r descriptives}
+print(colnames(df),)
+# condition A:
+Atime = df[df$where_bought == 'online' & df$who_bought == 'same', ]$time
+Atime_mean = mean(Atime)
+Atime_sd = sd(Atime,na.rm=FALSE)
+Atime_se = Atime_sd/sqrt(length(Atime))
+
+Amoney = df[df$where_bought == 'online' & df$who_bought == 'same', ]$money
+Amoney_mean = mean(Amoney)
+Amoney_sd = sd(Amoney,na.rm=FALSE)
+Amoney_se = Amoney_sd/sqrt(length(Amoney))
+
+# condition B:
+Btime = df[df$where_bought == 'online' & df$who_bought == 'different', ]$time
+Btime_mean = mean(Btime)
+Btime_sd = sd(Btime, na.rm=FALSE)
+Btime_se = Btime_sd/sqrt(length(Btime))
+
+Bmoney = df[df$where_bought == 'online' & df$who_bought == 'different', ]$money
+Bmoney_mean = mean(Bmoney)
+Bmoney_sd = sd(Bmoney,na.rm=FALSE)
+Bmoney_se = Bmoney_sd/sqrt(length(Bmoney))
+
+# condition C:
+
+Ctime = df[df$where_bought == 'store' & df$who_bought == 'same', ]$time
+Ctime_mean = mean(Ctime)
+Ctime_sd = sd(Ctime, na.rm=FALSE)
+Ctime_se = Ctime_sd/sqrt(length(Ctime))
+
+Cmoney = df[df$where_bought == 'store' & df$who_bought == 'same', ]$money
+Cmoney_mean = mean(Cmoney)
+Cmoney_sd = sd(Cmoney, na.rm=FALSE)
+Cmoney_se = Cmoney_sd/sqrt(length(Cmoney))
+
+#condition D:
+Dtime = df[df$where_bought == 'store' & df$who_bought == 'different', ]$time
+Dtime_mean = mean(Dtime)
+Dtime_sd = sd(Dtime, na.rm=FALSE)
+Dtime_se = Dtime_sd/sqrt(length(Dtime))
+
+Dmoney = df[df$where_bought == 'store' & df$who_bought == 'different', ]$money
+Dmoney_mean = mean(Dmoney)
+Dmoney_sd = sd(Dmoney,na.rm=FALSE)
+Dmoney_se = Dmoney_sd/sqrt(length(Dmoney))
+
+
+#----------
+#method 2. better way
+
+money_mean = tapply(df$money,list(df$where_bought,df$who_bought),mean)
+money_sd = tapply(df$money,list(df$where_bought,df$who_bought),sd)
+
+count = tapply(df$money,list(df$where_bought,df$who_bought),length)
+
+money_se = money_sd / sqrt(count)
+money_se
+
+sqrt(count)
+
+count[1]
+money_mean[1,2] 
+
+```
+
+4)	Which condition appears to have the best model fit using the mean as the model (i.e. smallest error) for time?
+    Small values indicate better model fit.
+    Condition D:store buy, differnet retailer,  has the smallest, so shwoing the best model fit. 
+    
+5)	What are the df for each condition?
+
+```{r df}
+dfA = length(Atime) -1
+
+dfB = length(Btime) -1
+dfC = length(Ctime) -1
+dfD = length(Dtime) -1
+
+```
+
+6)	What is the confidence interval (95%) for the means?
+
+```{r conf-interval}
+##money
+Amoney_confi <- c(Amoney_mean-1.96*Amoney_se, Amoney_mean+1.96*Amoney_se)
+#print(Amoney_confi)
+Bmoney_confi <- c(Bmoney_mean-1.96*Bmoney_se, Bmoney_mean+1.96*Bmoney_se)
+Cmoney_confi <- c(Cmoney_mean-1.96*Cmoney_se, Cmoney_mean+1.96*Cmoney_se)
+Dmoney_confi <- c(Dmoney_mean-1.96*Dmoney_se, Dmoney_mean+1.96*Dmoney_se)
+
+##time
+Atime_confi<- c(Atime_mean-1.96*Atime_se, Atime_mean+1.96*Atime_se)
+Btime_confi<- c(Btime_mean-1.96*Btime_se, Btime_mean+1.96*Btime_se)
+Ctime_confi<- c(Ctime_mean-1.96*Ctime_se, Ctime_mean+1.96*Ctime_se)
+Dtime_confi<- c(Dtime_mean-1.96*Dtime_se, Dtime_mean+1.96*Dtime_se)
+
+
+
+```
+
+7)	Use the MOTE library to calculate the effect size for the difference between money spent for the following comparisons (that means you'll have to do this twice):
+
+```{r MOTE}
+#install.packages("MOTE")
+library(MOTE)
+##Store versus online when bought at the same retailer
+
+#so confused, tried two methods, checked and confirmed my arguments are correct, not sure why the reuslt is >1.... unless I calcuate the comparison between online purchase with same versus different retailer
+
+
+effect1 = d.ind.t(Bmoney_mean, Amoney_mean, Bmoney_sd, Amoney_sd,
+        length(Bmoney), length(Amoney), a = 0.05)
+effect1$d
+
+#method 2: 
+money_mean = tapply(df$money,list(df$where_bought,df$who_bought),mean)
+money_sd = tapply(df$money,list(df$where_bought,df$who_bought),sd)
+
+count = tapply(df$money,list(df$where_bought,df$who_bought),length)
+
+money_se = money_sd / sqrt(count)
+effect1 = d.ind.t(money_mean[2,2],money_mean[1,2],money_sd[2,2],money_sd[1,2],count[1],count[1], a = 0.05)
+effect1 = d.ind.t(money_mean[2,2],money_mean[2,1],money_sd[1,1],money_sd[1,2],count[1],count[1], a = 0.05)
+effect1$d
+
+print(money_mean)
+print(money_mean[2,1])
+
+
+##Store versus online when bought at a different retailer
+
+effect2 = d.ind.t(Dmoney_mean, Cmoney_mean,Dmoney_sd, Cmoney_sd,
+        length(Cmoney), length(Bmoney), a = 0.05)
+print(effect2$d)
+
+```
+
+8)	What can you determine about the effect size in the experiment - is it small, medium or large? 
+    herr I use the Cohen’s ‘d’ to evaluate the effect size in the experiment. d is 3.x, so the effect size is small.
+
+9)	How many people did we need in the study for each comparison?
+```{r pwr}
+#install.packages("pwr")
+library(pwr)
+##Store versus online when bought at the same retailer
+
+pwr.p.test(h=effect1$d,sig.level = 0.05,power=0.8)  
+
+
+
+##Store versus online when bought at a different retailer
+
+#pwr.p.test(h=effect2$d,sig.level = 0.05,power=0.8)
+pwr.p.test(h=effect2$d,sig.level = 0.05,power=0.8)
+```

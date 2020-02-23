@@ -1,0 +1,88 @@
+---
+title: "lec_5_sampling_distribution_YingSong"
+author: "Ying Song"
+date: "2/19/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+# On your own
+
+# So far, we have only focused on estimating the mean living area in homes in Ames.
+# Now you'll try to estimate the mean home price.
+# .Take a random sample of size 50 from  price . Using this sample, what is your
+#  best point estimate of the population mean?
+```{r load the data}
+download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.RData")
+load("ames.RData")
+head(ames)
+names(ames)
+dim(ames)
+
+
+area <- ames$Gr.Liv.Area
+price <- ames$SalePrice
+
+```
+
+```{r}
+
+summary(price)
+samp1 = sample(price, 50 )
+mean(samp1)
+# best guess is from sample mean : $180976
+```
+
+# .Since you have access to the population, simulate the sampling distribution 
+# for $\bar{x}_{price}$ price (sampling mean of price ) by taking 5000 samples from
+# the population of size 50 and computing 5000 sample means.
+# Store these means in a vector called  sample_means50 . Plot the data,
+# then describe the shape of this sampling distribution. 
+# Based on this sampling distribution, what would you guess the mean home price of
+# the population to be? Finally, calculate and report the population mean.
+```{r for loop to get 5000 sample with sample size 50 }
+sample_means50 <- rep(NA, 5000)
+for (i in 1:5000){
+  samp <- sample(price, 50)
+  sample_means50[i] <- mean(samp)
+}
+
+hist(sample_means50, breaks = 25)
+
+```
+
+```
+
+# .Change your sample size from 50 to 150, then compute the sampling distribution 
+# using the same method as above, and store these means in a new vector called 
+# sample_means150 . Describe the shape of this sampling distribution, and compare
+# it to the sampling distribution for a sample size of 50.
+# Based on this sampling distribution, what would you guess to be the mean sale
+# price of homes in Ames?
+
+# .Of the sampling distributions from 2 and 3, which has a smaller spread? 
+# If we're concerned with making estimates that are more often close to the 
+# true value, would we prefer a distribution with a large or small spread?
+
+
+```{r }
+sample_means150 <- rep(NA, 5000)
+for (i in 1:5000){
+  samp <- sample(price, 150)
+  sample_means150[i] <- mean(samp)
+}
+
+par(mfrow = c(2,1))
+xlimits <- range(sample_means50)
+hist(sample_means50, breaks = 25, xlim = xlimits)
+hist(sample_means150, breaks = 25, xlim = xlimits)
+
+summary(sample_means150)
+```
+
+#The sampling distiribution with smaple size 150 has smaller spread, the better estimated mean is $180893. We prefer a distirubtion with smaller spread for estimation. 

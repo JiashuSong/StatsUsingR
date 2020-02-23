@@ -1,0 +1,48 @@
+---
+title: "lab01"
+author: "Ying Song"
+date: "1/27/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Lab requirement: The R code & line plot of the boys, girls and total all on the same plot and in separate color.  Do not foreget Title and axes labels and Chart legend
+
+## R Markdown
+```{r, import dataset}
+source("http://www.openintro.org/stat/data/arbuthnot.R")
+```
+
+
+```{r, view the dataset info}
+class(arbuthnot)
+str(arbuthnot)
+head(arbuthnot, 10)
+```
+```{r, play with the data}
+length(arbuthnot$girls)
+sum(arbuthnot$girls)
+```
+```{r, generate a new colomn called "total"}
+arbuthnot$total = arbuthnot$girls + arbuthnot$boys
+head(arbuthnot, 5)
+```
+
+## Including Plots
+
+```{r, echo=TRUE}
+plot(x = arbuthnot$year, y = arbuthnot$total, col = 'black', type="l",
+     xlab ="Year", ylab="Count", main  = "Arbuthnot Time Series Plots",
+     ylim = c(2500, 18000))
+lines(x = arbuthnot$year, y = arbuthnot$girls, col = 'red')
+lines(x = arbuthnot$year, y = arbuthnot$boys, col = 'blue')
+legend("topleft",
+       c("total","girls","boys"),
+       fill=c("black","red","blue"))
+
+
+```
