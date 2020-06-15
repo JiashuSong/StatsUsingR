@@ -1,0 +1,126 @@
+---
+title: "ANLY500_Final_Q2_YingSong"
+author: "Jiashu Song"
+date: "4/24/2020"
+output: word_document
+---
+
+ANOVA:
+	Capture an ANOVA model on the iris dataset. Set the dependent variable to 'Species'.
+	Capture a summary. 
+	Provide an interpretation of the results in your own words.  Support your response with results captured from running ANOVA.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r Load data}
+data <- read.csv("iris_exams.csv", header = TRUE)
+```
+
+```{r data screening}
+## Accuracy check and Missing data check
+summary(data)
+## No data errors. No missing data.
+
+## Outliers check using mahal cutoff 
+str(data)
+
+mahal = mahalanobis(data[,-c(1,2)],
+                    colMeans(data[,-c(1,2)], na.rm = TRUE),
+                    cov(data[,-c(1,2)], use = "pairwise.complete.obs"))
+summary(mahal)
+
+cutoff = qchisq(1-.001, ncol(data[,-c(1,2)]))
+print(cutoff) # Mahal score
+
+
+badmahal = as.numeric(mahal > cutoff) 
+table(badmahal)
+## 2 outliers are found.
+
+## remove outliers
+data_noout = subset(data, mahal < cutoff)
+str(data_noout)
+
+```
+
+
+```{r assumption}
+
+## Linearity
+random = rchisq(nrow(data_noout[,-c(1,2)]),7)
+fake = lm(random~., data = data_noout[,-c(1,2)])
+summary(fake)
+
+standardized = rstudent(fake)
+qqnorm(standardized)
+abline(0,1)
+## Meet linearity
+
+## Normality
+hist(standardized, breaks = 15)
+## slightly positive right skewness, meet normality.
+
+## Homogeneity/Homoscedasticity
+fitted = scale(fake$fitted.values)
+plot(fitted, standardized)
+abline(0,0)
+abline(v = 0)
+##  meet the homogenity and homoscedasticity.
+```
+
+ANOVA test is used to compare mulitple means.
+```{r run anova test}
+library(ez)
+
+
+data_noout$partno <- 1:nrow(data_noout) # add participant number
+#head(data_noout)
+#data_noout$Species = as.factor(data_noout$Species)
+#options(scipen = 999)
+#ezANOVA(data = data_noout,
+#        dv = Sepal.Width ,
+#        between = Sepal.Length,
+#        wid = partno,
+#        type = 3,
+#        detailed = T)
+
+ANOVA <- aov(Sepal.Width ~ Species, data=data_noout) # (DV ~ IV, data=dataset)
+summary(ANOVA) # View results of the ANOVA test
+
+ANOVA <- aov(Sepal.Length ~ Species, data=data_noout) # (DV ~ IV, data=dataset)
+summary(ANOVA) # View results of the ANOVA test
+
+ANOVA <- aov(Petal.Length ~ Species, data=data_noout) # (DV ~ IV, data=dataset)
+summary(ANOVA) # View results of the ANOVA test
+
+ANOVA <- aov(Petal.Width ~ Species, data=data_noout) # (DV ~ IV, data=dataset)
+summary(ANOVA) # View results of the ANOVA test
+
+
+
+```
+
+P-value is less than alpha 0.05 siginificant level. The result indicates that we reject the null hypothesis which means there is at least one of the means is statistically significant. 
+
+## Including Plots
+
+
+```{r Group, color, and fill by Species}
+
+library(ggplot2)
+
+ggplot(data_noout, aes(x=Sepal.Width)) +
+  geom_density(aes(group=Species, color=Species, fill=Species), alpha=0.3)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,78 @@
+---
+title: "Jiashu's R code bank"
+author: "Ying Song"
+date: "4/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r cars}
+summary(cars)
+```
+
+Data loading/processing/reformating
+
+```{r }
+# load csv
+df <- read.csv('EspressoData.csv')
+head(df)
+str(df)
+
+
+#laod excel
+library(readxl)
+
+CholestoralData <- read_excel('CholestoralData.xlsx')
+
+str(CholestoralData)
+summary(CholestoralData)
+
+```
+
+```{r}
+# factor the categorical data 
+df$brewmethod = factor (df$brewmethod)
+str(df$brewmethod)
+
+
+#Note that the following code is necessary for R to recognize Year as a factor variable.
+###  Convert Year from an integer variable to a factor variable
+
+Data$Year = factor(Data$Year,
+                   levels=c("7", "8", "9", "10"))
+```
+
+```{r}
+#aggereate (groupby) based on groups(method, name etc) in one col
+aggdata <-aggregate(mtcars, by=list(cyl,vs), FUN=mean, na.rm=TRUE)
+
+aggregate(df[1], list(df$brewmethod), mean)
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r visualization }
+
+library(ggplot2)
+cleanup = theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(),
+                axis.line.x = element_line(color = "black"),
+                axis.line.y = element_line(color = "black"),
+                legend.key = element_rect(fill = "white"),
+                text = element_text(size = 15))
+
+## Sepal length & petal length
+scatter1 = ggplot(data_noout, aes(Sepal.Length, Petal.Length))
+scatter1 +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  xlab("Sepal Length") +
+  ylab("Petal Length") +
+  cleanup
+
+```
+

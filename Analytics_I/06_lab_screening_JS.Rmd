@@ -1,0 +1,200 @@
+---
+title: "Data Screening"
+author: "Jiashu Song"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dataset:
+
+600 employees participated in a company-wide experiment to test if an educational program would be effective at increasing employee satisfaction. Half of the employees were assigned to be in the control group, while the other half were assigned to be in the experimental group. The experimental group was the only group that received the educational intervention. All groups were given an employee satisfaction scale at time one to measure their initial levels of satisfaction. The same scale was then used half way through the program and at the end of the program. The goal of the experiment was to assess satisfaction to see if it increased across the measurements during the program as compared to a control group. 
+
+## Variables: 
+
+    a) Gender (1 = male, 2 = female)
+    b) Group (1 = control group, 2 = experimental group)
+    c) 3 satisfaction scores, ranging from 2-100 points. Decimals are possible! The control group was measured at the same three time points, but did not take part in the educational program. 
+        i) Before the program
+        ii)	Half way through the program 
+        iii) After the program 
+
+```{r starting}
+#install.packages('mice')
+library(mice)
+data = read.csv('06_data.csv')
+summary(data)
+head(data)
+```
+
+# Data screening:
+
+## Accuracy:
+
+    a)	Include output and indicate how the data are not accurate.
+        answer: from the summary table, there are missing data, also satification score max is over 100 in begin and after columns.
+    b)	Include output to show how you fixed the accuracy errors, and describe what you did.
+    
+```{r accuracy}
+summary(data) 
+
+dataClean = data
+# convert numerical values to char as categorical variable
+dataClean$Gender = factor(dataClean$Gender, 
+                     levels = c(1,2), 
+                     labels = c("Male", "Female"))
+dataClean$Group = factor(dataClean$Group, 
+                     levels = c(1,2),
+                     labels = c("control", "experimental"))
+table(dataClean$Gender)
+table(dataClean$Group)
+
+summary(dataClean) 
+
+#resign the satification value over 100 to Nan. min of satisfication columns are larger 2 so skipped the mininal value checking.
+dataClean$Begin[dataClean$Begin > 100] = NA
+dataClean$After[dataClean$After > 100] = NA
+
+#do the resign process for the 3 score cols:
+dataClean[ ,3:5][dataClean[ ,3:5] > 100] = NA
+summary(dataClean) 
+head(dataClean)
+
+
+```
+
+## Missing data:
+
+    a)	Include output that shows you have missing data.
+    b)	Include output and a description that shows what you did with the missing data.
+        i)	Replace all participant data if they have less than or equal to 20% of missing data by row. 
+        ii)	You can leave out the other participants (i.e. you do not have to create allrows). 
+        
+```{r missing}
+# check how many missing data for each col:
+apply(dataClean, 2, function(x) sum(is.na(x)))
+percmiss = function(x){sum(is.na(x)/length(x)*100)}
+missdata = apply(dataClean,1, percmiss)
+table(missdata)
+
+#replace rows < 20% missing data
+replacedata = subset(dataClean, missdata <= 20)
+missinga = apply(replacedata, 1, percmiss) # set = 2 for col 
+table(missinga)
+
+# leave out rows with > 20% missing data
+norep = subset(dataClean, missdata > 20)
+missingb = apply(norep, 1, percmiss)
+table(missingb)
+
+replacescores = replacedata[ , -c(1,2)] # only select 3 score cols
+replacecate = replacedata[ , c(1,2)] #select the first two cols
+
+#Imputing the missing data using mice
+md.pattern(replacescores)
+
+tempdata = mice(replacescores)
+
+completedata = complete(tempdata)
+
+summary(completedata)
+alldata = cbind(replacecate,completedata)
+summary(alldata)
+
+```
+
+## Outliers:
+
+    a)	Include a summary of your mahal scores that are greater than the cutoff.
+    b)	What are the df for your Mahalanobis cutoff?
+        3 degrees of freedom
+    c)	What is the cut off score for your Mahalanobis measure?
+        16.27
+    d)	How many outliers did you have?
+        5
+    e)	Delete all outliers. 
+    
+```{r outliers}
+str(completedata)
+maha = mahalanobis(completedata,
+                    colMeans(completedata, na.rm=TRUE),
+                    cov(completedata, use ="pairwise.complete.obs"))
+
+maha
+
+cutoff = qchisq(1-.001,ncol(completedata))
+print(cutoff)
+
+summary(maha < cutoff)
+
+filterdata = subset(alldata, maha < cutoff) # delete outlier, subset the 
+summary(filterdata)
+
+```
+
+# Assumptions:
+
+## Additivity: 
+
+    a)  Include the symnum bivariate correlation table of your continuous measures.
+    b)  Do you meet the assumption for additivity? 
+        Yes
+    
+```{r additivity}
+library(corrplot)
+cor(filterdata[, -c(1,2)])
+corrplot(cor(filterdata[, -c(1,2)]))
+
+symnum(cor(filterdata[, -c(1,2)]))
+
+```
+
+## Linearity: 
+
+    a)  Include a picture that shows how you might assess multivariate linearity.
+    b)  Do you think you've met the assumption for linearity? likly.  
+    
+```{r linearity}
+rchidata = rchisq(nrow(filterdata), 3)
+modeldata = lm(rchidata~., data = filterdata[, -c(1,2)])
+summary(modeldata)
+standardized = rstudent(modeldata)
+
+{qqnorm(standardized)
+    abline(0,1)}
+
+
+
+```
+
+## Normality: 
+
+    a)  Include a picture that shows how you might assess multivariate normality.
+    b)  Do you think you've met the assumption for normality?  No. 
+
+```{r normality}
+library(moments)
+hist(standardized, breaks =20)
+
+skewness(filterdata[,-c(1,2)], na.rm = T)
+
+```
+
+## Homogeneity/Homoscedasticity: 
+
+    a)  Include a picture that shows how you might assess multivariate homogeneity.
+    b)  Do you think you've met the assumption for homogeneity? no
+    c)  Do you think you've met the assumption for homoscedasticity? no
+
+```{r homog-s}
+{plot(scale(modeldata$fitted.values), standardized) 
+abline(0,0)
+abline(v = 0)}
+
+
+```

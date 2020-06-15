@@ -1,0 +1,258 @@
+---
+title: "Regression, Mediation, Moderation"
+author: "Jiashu Song"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*Title*: The influence of cognitive and affective based job satisfaction measures on the relationship between satisfaction and organizational citizenship behavior
+
+*Abstract*: One of the most widely believed maxims of management is that a happy worker is a productive worker. However, most research on the nature of the relationship between job satisfaction and job performance has not yielded convincing evidence that such a relationship exists to the degree most managers believe. One reason for this might lie in the way in which job performance is measured. Numerous studies have been published that showed that using Organizational Citizenship Behavior to supplant more traditional measures of job performance has resulted in a more robust relationship between job satisfaction and job performance. Yet, recent work has suggested that the relationship between job satisfaction and citizenship may be more complex than originally reported. This study investigated whether the relationship between job satisfaction and citizenship could depend upon the nature of the job satisfaction measure used. Specifically, it was hypothesized that job satisfaction measures which reflect a cognitive basis would be more strongly related to OCB than measures of job satisfaction, which reflect an affective basis. Results from data collected in two midwestern companies show support for the relative importance of cognition based satisfaction over affect based satisfaction. Implications for research on the causes of citizenship are discussed.
+
+# Dataset:
+    
+    - Dependent variable (Y): OCB - Organizational citizenship behavior measure
+    -	Independent variables (X)
+        - Affective - job satisfaction measures that measure emotion
+        - Cognitive - job satisfaction measures that measure cognitions (thinking)
+        -	Years - years on the job
+        -	Type_work - type of employee measured (secretary, assistant, manager, boss)	
+
+# Data Screening:
+
+Assume the data is accurate with no missing values.  You will want to screen the dataset using all the predictor variables to predict the outcome in a simultaneous multiple regression (all the variables at once).  This analysis will let you screen for outliers and assumptions across all subsequent analyses/steps. Be sure to factor type_work.
+
+```{r starting}
+
+df <- read.spss('08_data.sav', to.data.frame = TRUE)
+dim(df)
+df$type_work <- factor(df$type_work, 
+                       levels = c("secretary", "assistant", "manager", "boss"),
+                       labels = c(1, 2, 3, 4))
+#df$type_work <- as.numeric(df$type_work)
+summary(df)
+
+```
+
+## Outliers
+    
+    a.	Leverage:
+        i.	What is your leverage cut off score? 0.0875
+        ii.	How many leverage outliers did you have? 7
+
+```{r leverage}
+m1 = lm(OCB ~ type_work + cognitive + affective + years , data = df) 
+summary(df)
+k = 6 ##number of IVs
+leverage = hatvalues(m1)
+cutleverage = (2*k+2) / nrow(df)
+print(cutleverage)
+badleverage = as.numeric(leverage > cutleverage)
+table(badleverage)
+```
+        
+    b.	Cook's:
+        i.	What is your Cook's cut off score? 0.02614379
+        ii.	How many Cook's outliers did you have? 9
+        
+```{r cooks}
+cooks = cooks.distance(m1)
+cutcooks = 4 / (nrow(df) - k - 1)
+print(cutcooks)
+badcooks = as.numeric(cooks > cutcooks)
+table(badcooks)
+
+```
+        
+    c.	Mahalanobis:
+        i.	What is your Mahalanobis df? mahal 
+        ii.	What is your Mahalanobis cut off score? 18.46683
+        iii.	How many outliers did you have for Mahalanobis? 0 
+        
+```{r mahal}
+mahal = mahalanobis(df[, -1], 
+                    colMeans(df[, -1]), 
+                    cov(df[, -1]))
+cutmahal = qchisq(1-.001, ncol(df[, -1]))
+print(cutmahal)
+badmahal = as.numeric(mahal > cutmahal) 
+table(badmahal)
+
+```
+        
+    d.	Overall:
+        i.	How many total outliers did you have across all variables? None
+        ii.	Delete them!
+
+```{r overall}
+
+totalout=badleverage+badcooks+badmahal
+table(totalout)
+
+noout = subset(df, totalout < 2)
+noout
+
+```
+
+# Assumptions:
+
+## Additivity:
+
+    a.	Include a correlation table of your independent variables.
+    b.	Do your correlations meet the assumption for additivity (i.e. do you have multicollinearity)? No CoC larger than 0.7, the model is not multicollinearity.
+
+```{r additivity}
+# run the model again without the outliers:
+m2 = lm(OCB ~ type_work + cognitive + affective + years , data = noout) 
+summary(m2, correlation = TRUE)
+
+```
+
+## Linearity: 
+
+    a.	Include a picture that shows how you might assess multivariate linearity.
+    b.	Do you think you've met the assumption for linearity?  pretty much 
+
+```{r linearity}
+standardized = rstudent(m2)
+print(head(standardized))
+fitted = scale(m2$fitted.values)
+print(head(fitted))
+qqnorm(standardized)
+abline(0,1)
+
+```
+
+## Normality: 
+
+    a.	Include a picture that shows how you might assess multivariate normality.
+    b.	Do you think you've met the assumption for normality? Yes
+
+```{r normality}
+hist(standardized, breaks = 20)
+
+```
+
+## Homogeneity and Homoscedasticity: 
+
+    a.	Include a picture that shows how you might assess multivariate homogeneity.
+    b.	Do you think you've met the assumption for homogeneity? No. 
+    c.	Do you think you've met the assumption for homoscedasticity? No.
+    
+```{r homogs}
+plot(fitted, standardized)
+abline(0,0)
+abline(v = 0)
+
+
+```
+
+# Hierarchical Regression:
+
+    a.	First, control for years on the job in the first step of the regression analysis.
+    b.	Then use the factor coded type of job variable to determine if it has an effect on organizational citizenship behavior.
+    c.	Last, test if cognitive and affect measures of job satisfaction are predictors of organizational citizenship behavior. 
+    d.  Include the summaries of each step, along with the ANOVA of the change between each step.
+    
+```{r hierarchical}
+ma = lm(OCB ~ years, data = noout)
+summary(ma)
+mb = lm(OCB ~ years + type_work, data = noout)
+summary(mb)
+mc = lm(OCB ~ years + type_work + cognitive + affective, data = noout)
+summary(mc)
+
+anova(ma, mb, mc)
+
+```
+
+# Mediation
+
+    a.  Calculate a mediation model wherein the number of years mediates the relationship between affective measurements and OCB.
+    b.  Include each path and summaries of those models.
+    c.  Include the Sobel test.
+    d.  Include the bootstrapped indirect effect. 
+
+```{r mediation}
+m3=lm(OCB~affective,data=noout) # dependent ~ predictor 
+summary(m3)
+m4=lm(years ~ affective, data=noout) # mediator ~ predictor
+summary(m4)
+
+m5=lm(OCB ~ affective + years, data=noout) # dependent ~ predcitor +mediator
+summary(m5)
+
+#Sobel test
+a = coef(m4)[2]
+b = coef(m5)[3]
+SEa = summary(m4)$coefficients[2,2]
+SEb = summary(m5)$coefficients[3,2]
+zscore = (a*b)/(sqrt((b^2*SEa^2)+(a^2*SEb^2)+(SEa*SEb))) 
+zscore
+
+
+pnorm(abs(zscore), lower.tail = F)*2
+
+
+#indirect effect
+indirectsaved = function(formula2, formula3, dataset, random) {
+  d = dataset[random, ] #randomize by row
+  m4 = lm(formula2, data = d)
+  m5 = lm(formula3, data = d)
+  a = coef(m4)[2]
+  b = coef(m5)[3]
+  indirect = a*b
+  return(indirect)
+}
+
+library(boot)
+bootresults=boot(data=noout,
+                 statistic=indirectsaved,
+                 formula2=affective~years,
+                 formula3=OCB~years+affective,
+                 R=1000)
+bootresults
+
+boot.ci(bootresults,
+        conf = .95,
+        type = "norm")
+
+```
+
+# Write up:
+    
+    Hierarchical regression only!
+    a.	Include a brief description of the experiment, variables, and order entered into steps.
+     The experiement use the data type of work, cognitive, affective, and years to predict the OCB. 
+    b.	Include a brief section on the data screening/assumptions.
+    Data screening looked for the the outliers using three different measurements: leverage, Mahalanobis, and cooks. No outlier is found having been labelled as outlier in at least two mehtods so nothing is removed from later analysis. 
+    c.	Include the all F-values for each step of the model - you can reference the above table.
+    First, control for years on the job in the first step of the regression analysis.F-statistic: 0.008275 on 1 and 158 DF,  p-value: 0.9276
+
+    Then use the factor coded type of job variable to determine if it has an effect on organizational citizenship behavior.F-statistic: 178.5 on 4 and 155 DF,  p-value: < 2.2e-16
+
+    Last, test if cognitive and affect measures of job satisfaction are predictors of organizational citizenship behavior. F-statistic: 150.1 on 6 and 153 DF,  p-value: < 2.2e-16
+
+
+    d.	Include all the b or beta values for variables in the step they were entered.  So, you will not have double b values for any predictor - you can reference the above table.
+var.           b   
+
+years        0.24098    
+type_work2  11.70696    
+type_work3  16.32134    
+type_work4  22.15615    
+cognitive    0.02314        
+affective    0.05766    
+---
+    
+    e.	Include an interpretation of the results (dummy coding, do our results match the study results, etc.).
+        All three models are siginficant.For the different worker types, "secretary" has less significant than the other three.Based ont he b value, cognifitive has less significant than other predictors. 
+
+
+

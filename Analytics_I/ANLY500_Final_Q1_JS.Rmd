@@ -1,0 +1,167 @@
+---
+title: "ANLY 500 Final exam -Q1"
+author: "Jiashu Song"
+date: "4/19/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+	Capture a  Regression Model with Only Significant Variables.  
+Set the dependent variable to 'Species'. 
+
+	Capture the final model summary. Provide any visuals that help interpret the results. 
+	Provide an interpretation of the results in your own words.  Support your response with results captured from the linear regression analysis.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r  Load data}
+data <- read.csv("iris_exams.csv", header = TRUE)
+head(data[2])
+
+head(data[,-c(1,2)])
+```
+
+```{r  Data Screening}
+
+## Accuracy check and Missing data check
+summary(data)
+## No data errors. No missing data.
+
+## Outliers check using mahal cutoff 
+str(data)
+
+mahal = mahalanobis(data[,-c(1,2)],
+                    colMeans(data[,-c(1,2)], na.rm = TRUE),
+                    cov(data[,-c(1,2)], use = "pairwise.complete.obs"))
+summary(mahal)
+
+cutoff = qchisq(1-.001, ncol(data[,-c(1,2)]))
+print(cutoff) # Mahal score
+
+
+badmahal = as.numeric(mahal > cutoff) 
+table(badmahal)
+## 2 outliers are found.
+
+## remove outliers
+data_noout = subset(data, mahal < cutoff)
+str(data_noout)
+
+
+
+```
+
+```{r assumption}
+
+## Linearity
+random = rchisq(nrow(data_noout[,-c(1,2)]),7)
+fake = lm(random~., data = data_noout[,-c(1,2)])
+summary(fake)
+
+standardized = rstudent(fake)
+qqnorm(standardized)
+abline(0,1)
+## Meet linearity
+
+## Normality
+hist(standardized, breaks = 15)
+## slightly positive right skewness, meet normality.
+
+## Homogeneity/Homoscedasticity
+fitted = scale(fake$fitted.values)
+plot(fitted, standardized)
+abline(0,0)
+abline(v = 0)
+##  meet the homogenity and homoscedasticity.
+
+```
+
+```{r}
+## Correlation Matrix and Visual
+library(datasets)
+cor(data_noout[,-c(1,2)])
+
+library(corrplot)
+corrplot(cor(data_noout[,-c(1,2)]))
+```
+
+    From the correlation matrix,  sepal length has strong postive correlation with petal length and petal width, and a weak negtive correlation with sepal width. Sepal width has strong negtive correlation with petal length and petal width. Petal length has a positive correlation with petal width.
+
+```{r}
+## Support the correlation analysis
+library(ggplot2)
+cleanup = theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(),
+                axis.line.x = element_line(color = "black"),
+                axis.line.y = element_line(color = "black"),
+                legend.key = element_rect(fill = "white"),
+                text = element_text(size = 15))
+
+## Sepal length & petal length
+scatter1 = ggplot(data_noout, aes(Sepal.Length, Petal.Length))
+scatter1 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x ) +
+  xlab("Sepal Length") +
+  ylab("Petal Length") +
+  cleanup
+
+## Sepal length & petal width
+scatter2 = ggplot(data_noout, aes(Sepal.Length, Petal.Width))
+scatter2 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x) +
+  xlab("Sepal Length") +
+  ylab("Petal Width") +
+  cleanup
+
+## Sepal length & sepal width
+scatter3 = ggplot(data_noout, aes(Sepal.Length, Sepal.Width))
+scatter3 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x) +
+  xlab("Sepal Length") +
+  ylab("Sepal Width") +
+  cleanup
+
+## Sepal width & petal length
+scatter4 = ggplot(data_noout, aes(Sepal.Width, Petal.Length))
+scatter4 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x) +
+  xlab("Sepal Width") +
+  ylab("Petal Length") +
+  cleanup
+
+## Sepal width & petal width
+scatter5 = ggplot(data_noout, aes(Sepal.Width, Petal.Width))
+scatter5 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x) +
+  xlab("Sepal Width") +
+  ylab("Petal Width") +
+  cleanup
+
+## Petal length & petal width
+scatter6 = ggplot(data_noout, aes(Petal.Length, Petal.Width))
+scatter6 +
+  geom_point() +
+  geom_smooth(method = "lm", formula =y ~ x) +
+  xlab("Petal Length") +
+  ylab("Petal Width") +
+  cleanup
+```
+
+```{r}
+## Variance and Covariance
+var(data_noout[,-c(1,2)])
+
+cov(data_noout[,-c(1,2)])
+
+```
+

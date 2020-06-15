@@ -1,6 +1,6 @@
 ---
 title: "Statistical Modeling and Graphing"
-author: "Ying Song"
+author: "Jiashu Song"
 date: "`r Sys.Date()`"
 output:
   word_document: default

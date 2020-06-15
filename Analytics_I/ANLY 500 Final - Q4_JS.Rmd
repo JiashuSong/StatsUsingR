@@ -1,0 +1,143 @@
+---
+title: "ANLY 500 Final exam -Q4"
+author: "Jiashu Song"
+date: "4/26/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load data}
+data = read.csv("iris_exams.csv", header = TRUE)
+```
+
+```{r}
+## Data Screening
+
+## Accuracy check and Missing data check
+summary(data)
+## No data errors. No missing data.
+
+## Outliers check
+str(data)
+
+mahal = mahalanobis(data[,-c(1,2)],
+                    colMeans(data[,-c(1,2)], na.rm = TRUE),
+                    cov(data[,-c(1,2)], use = "pairwise.complete.obs"))
+summary(mahal)
+
+cutoff = qchisq(1-.001, ncol(data[,-c(1,2)]))
+print(cutoff)
+
+summary(mahal < cutoff)
+## There are total 2 outliers exist.
+
+## Get rid of outliers
+data_noout = subset(data, mahal < cutoff)
+str(data_noout)
+data_new = data_noout[,-c(1)]
+```
+
+```{r assumption}
+
+## Linearity
+random = rchisq(nrow(data_noout[,-c(1,2)]),7)
+fake = lm(random~., data = data_noout[,-c(1,2)])
+summary(fake)
+
+standardized = rstudent(fake)
+qqnorm(standardized)
+abline(0,1)
+## Meet linearity
+
+## Normality
+hist(standardized, breaks = 15)
+## slightly positive right skewness, meet normality.
+
+## Homogeneity/Homoscedasticity
+fitted = scale(fake$fitted.values)
+plot(fitted, standardized)
+abline(0,0)
+abline(v = 0)
+##  meet the homogenity and homoscedasticity.
+```
+
+```{r}
+## Independent t-test
+data_novirginica = data_new[!data_new$Species == "virginica",]
+
+## Two Sample t-test
+t.test(Sepal.Length~Species,
+       data = data_novirginica,
+       var.equal = TRUE,
+       paired = FALSE)
+
+## Welch Two Sample t-test
+t.test(Sepal.Length~Species,
+       data = data_novirginica,
+       var.equal = FALSE,
+       paired = FALSE)
+
+M = tapply(data_novirginica$Sepal.Length, data_novirginica$Species, mean)
+stdev = tapply(data_novirginica$Sepal.Length, data_novirginica$Species, sd)
+N = tapply(data_novirginica$Sepal.Length, data_novirginica$Species, length)
+
+M;stdev;N
+
+```
+
+```{r}
+## Effect Size
+library(MOTE)
+
+effect = d.ind.t(m1 = M[1], m2 = M[2], sd1 = stdev[1], sd2 = stdev[2], n1 = N[1], n2 = N[2], a = 0.05)
+
+effect$d
+```
+
+```{r}
+## Power
+library(pwr)
+
+pwr.t.test(n = NULL, d = effect$d, sig.level = 0.05, power = 0.80, type = "two.sample", alternative = "two.sided")
+```
+
+```{r}
+## Graphs
+library(ggplot2)
+
+cleanup = theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(),
+                axis.line.x = element_line(color = "Black"),
+                axis.line.y = element_line(color = "Black"),
+                legend.key = element_rect(fill = "White"),
+                text = element_text(size = 15))
+
+barchart = ggplot(data_novirginica, aes(Species, Sepal.Length))
+barchart +
+  stat_summary(fun.y = mean,
+               geom = "bar",
+               fill = "White",
+               color = "Black") +
+  stat_summary(fun.data = mean_cl_normal,
+               geom = "errorbar",
+               width = 0.2,
+               position = "dodge") +
+  xlab("Species") +
+  ylab("Sepal Length") +
+  scale_x_discrete(labels = c("setosa", "versicolor")) +
+  cleanup
+```
+
+Interpretation:
+
+The above t-test analysis shows the Sepal Length has effect on both Species (Setosa & Versicolor).t = -14.045, df = 157.12, p-value < 2.2e-16, as provided by Welch two-sample independent t-test. Thus, we can reject the NULL Hypothesis. Species Versicolor (M=5.99/SD=0.55) has longer Sepal Length than the Species Setosa (M=5.09/SD=0.31), 
+
+
+

@@ -1,0 +1,51 @@
+---
+title: "analytics500-midterm-q26"
+author: "Jiashu Song"
+date: "2/22/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Create a bar graph using the attached Iris dataset: iris_exams.csv
+Preview the document (click to download). Compare the Sepal Length of the flower Species. Include the following:
+
+Main Title
+X and Y-Axis Labels
+ Colors by Species 
+Provide an interpretation in one paragraph  (no more than 300 words) explaining the distribution of the data. 
+Which Species Sepal.Length is greater?
+
+
+```{r }
+
+
+df= read.csv('iris_exams.csv', header = TRUE)
+
+summary(df)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+library(ggplot2)
+# Sepal width
+SL = df$Sepal.Length
+ggplot(data=df, aes(x=SL))+
+  geom_histogram(binwidth=0.2, color="white", aes(fill=Species)) + 
+  xlab("Sepal Width (cm)")+
+  ylab( "Frequency" )+
+  ggtitle("Histogram of Sepal Width")+
+  geom_vline(data=df, aes(xintercept = mean(SL)),linetype="dashed",color="black")
+
+
+```
+answer: from the plot above , we can tell the three distributions and mean. virginica with blue colar shows greater Sepal Width than the other two species. 
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

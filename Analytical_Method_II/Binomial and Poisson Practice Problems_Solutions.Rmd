@@ -1,0 +1,100 @@
+---
+title: " Solutions to Binomial and Poisson Practice Problems"
+author: "Jiashu Song"
+"
+date: "`r Sys.Date()`"
+output: html_document
+---
+The problems below will assist you in ensuring you have mastered finding probabilities from the Binomial and Poission distribution.
+
+These problems are not being collected for a grade. Solutions will be posted by Wednesday May 20, 2020 so you may check your answers.
+
+1. Use the appropriate R function (must be one we discussed from class) and find the following probabilities:
+
+a. probability of 5 successes from a Bin(10,1/4) distribution. 
+
+```{r}
+dbinom(5,10,0.25)
+
+```
+
+b. probability of 5 or less successes from a Bin(10,1/4) distribution.
+
+
+```{r}
+pbinom(5,10,0.25,lower.tail=TRUE)
+```
+
+c. probability of less than 5 successes from a Bin(10,1/4) distribution.
+
+```{r}
+pbinom(4,10,0.25,lower.tail=TRUE)
+```
+
+d. probability of 5 or more successess from a Bin(10,1/4) distribution.
+
+```{r}
+1- pbinom(4,10,0.25,lower.tail=TRUE)
+
+#OR
+
+dbinom(5,10,0.25) + pbinom(5,10,0.25,lower.tail=FALSE)
+```
+
+e. probability of more than 5 successess from a Bin(10,1/4) distribution.
+
+```{r}
+pbinom(5,10,0.25,lower.tail=FALSE)
+```
+
+
+2. You are a data analyst working for an insurance company. You are interested in the number of claims that get submitted per day. X=# claims filed in one day.You know the mean number of claims filed per day is 15.  
+
+Use the appropriate R function (must be one we discussed in class) to find the probabilities below.
+
+a. What is the probability that more than 10 claims will filed in one day?
+
+
+```{r}
+ppois(10,15,lower.tail=FALSE)
+
+```
+
+
+b. What is the probability that 10 or more claims will be filed in one day?
+
+```{r}
+1-ppois(9,15,lower.tail=TRUE)
+```
+
+c. What is the probability that more than 7 claims will be filed in one day?
+
+```{r}
+ppois(7,15,lower.tail=FALSE)
+```
+
+d. What is the probability that 6 or less claims will be filed in one day?
+
+```{r}
+ppois(6,15,lower.tail=TRUE)
+```
+
+
+e. What is the probability that less than 6 claims will be filed in one day?
+
+```{r}
+ppois(5,15,lower.tail=TRUE)
+```
+
+f. What is the probability that exactly 7 claims will be filed in one day?
+
+```{r}
+dpois(7,15)
+```
+
+
+
+
+
+
+

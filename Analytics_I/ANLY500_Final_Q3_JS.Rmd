@@ -1,0 +1,89 @@
+---
+title: "ANLY500_Final_Q3_YingSong"
+author: "Jiashu Song"
+date: "4/26/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Perform data screening making sure to check for accuracy, missing, outliers.
+Perform assumption checks for linearity, normality, homogeneity, and homoscedasticity.
+Capture a Correlation Matrix and Visual to express the relationship between each of the variables in the iris dataset.  
+What is the correlated effect? Provide an interpretation in your own words. Support your response with results captured from the correlation analysis.  
+Calculate the Variance. What does it tell us?
+Calculate the Covariance. What does it tell us?
+
+```{r load data}
+data = read.csv("iris_exams.csv", header = TRUE)
+```
+
+Data screening: 
+
+```{r data screeening}
+## Accuracy check and Missing data check
+summary(data)
+## No data errors. No missing data.
+
+## Outliers check using mahal cutoff 
+str(data)
+
+mahal = mahalanobis(data[,-c(1,2)],
+                    colMeans(data[,-c(1,2)], na.rm = TRUE),
+                    cov(data[,-c(1,2)], use = "pairwise.complete.obs"))
+summary(mahal)
+
+cutoff = qchisq(1-.001, ncol(data[,-c(1,2)]))
+print(cutoff) # Mahal score
+
+
+badmahal = as.numeric(mahal > cutoff) 
+table(badmahal)
+## 2 outliers are found.
+
+## remove outliers
+data_noout = subset(data, mahal < cutoff)
+str(data_noout)
+```
+
+```{r generate the correlation matrix}
+cor(data_noout$Petal.Length, data_noout$Petal.Width)
+
+res <- cor(data_noout[,-c(1,2)])
+round(res, 2)
+
+```
+
+```{r Correlation Matrix and Visual}
+library("Hmisc")
+res2 <- rcorr(as.matrix(data_noout[,-c(1,2)]))
+res2
+
+library(corrplot)
+corrplot(cor(data_noout[,-c(1,2)]))
+
+```
+# calculate the variance:
+
+```{r Variance.}
+library(datasets)
+cov(data_noout$Sepal.Length, data_noout$Sepal.Width)
+
+cov = cov(data_noout[,-c(1,2)])
+cov
+#install.packages('plot.matrix')
+library('plot.matrix')
+library('psych')
+fa <- fa(cov, 4, rotate="varimax")
+par(mar=c(5.1, 4.1, 4.1, 4.1)) # adapt margins
+plot(loadings(fa), cex=0.5)
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,184 @@
+---
+title: 'Executive Session #1 Exercises'
+author: "Jiashu Song"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+This assignment is worth 100 points. Each question is worth 7.5 points each.
+
+Submission Instructions: save the .HTML file as 'Executive Session1Exercises_yourlastname.HTML' and upload the HTML file to the assignment entitled 'Executive Session #1 Exercises' on or before Saturday May 9, 2020 by 12:00p.m. (noon) EST. No late assignments are accepted.
+
+
+packages <-c("AER", "ca", "car","colorspace", "corrplot", "countreg", "directlabels", "effects", "ggparallel", "ggplot2", "ggtern", "gmodels", "gnm", "gpairs", "heplots", "Lahman", "lattice", "lmtest", "logmult", "MASS", "mgcv", "nnet", "plyr", "pscl", "RColorBrewer", "reshape2", "rms","rsm", "sandwich", "splines", "vcd", "vcdExtra", "VGAM", "xtable") 
+install.packages(packages)
+```{r}
+
+```
+
+1. #2.1 p.p. 60-61
+
+
+Run the code chunk below. 
+
+```{r}
+library(vcd)
+library(grid)
+library(gnm)
+library(vcdExtra)
+
+ds <- datasets(package = c("vcd", "vcdExtra"))
+str(ds, vec.len=2)
+
+View(ds)
+
+View(UCBAdmissions)
+str(UCBAdmissions)
+```
+
+
+a. How many data sets are there altogether? How many are there in each package? 
+
+```{r}
+nrow(ds)
+
+table(ds$Package)
+```
+
+b. Make a tabular display of the frequencies by Package and class. 
+```{r}
+
+table(ds$Package, ds$class)
+```
+
+
+c. Choose one or two data sets from this list, and examine their help files (e.g., help(Arthritis) or ?Arthritis). You can use, e.g., example(Arthritis) to run the R code for a given example. 
+
+```{r}
+help("CoalMiners")
+example(Arthritis)
+```
+
+
+2. p. 61 #2.3 
+
+a. Find the total number of cases contained in this table.
+
+```{r}
+View(UCBAdmissions)
+sum(UCBAdmissions)
+```
+
+b. For each department, find the total number of applicants.
+
+```{r}
+str(UCBAdmissions) # A table
+
+margin.table(UCBAdmissions, 3) # dept col is 3rd col 
+
+xtabs(Freq~Dept, data=UCBAdmissions) #another way to do it!
+```
+
+c. For each department, find the overall proportion of applicants who were admitted. 
+
+```{r}
+prop.table(UCBAdmissions, 3)
+
+admin.df<- as.data.frame(UCBAdmissions)
+
+admin.cont <- xtabs(Freq~Dept + Admit, data = admin.df)
+admin.cont
+
+#Proportion
+prop.table(admin.cont, 1)
+
+```
+
+d. Construct a tabular display of department (rows) and gender (columns), showing the proportion of applicants in each cell who were admitted relative to the total applicants in that cell. 
+
+```{r}
+
+array<- t(prop.table(ftable(Dept~Admit+Gender, data = UCBAdmissions))[1:2,])
+array
+dimnames(array) <- list(c('A','B','C','D','E','F'), c('Male', 'Female'))
+array
+
+
+```
+
+3. p. 61 #2.4 a, c, e
+
+
+a. Find the total number of cases represented in this table. 
+
+```{r}
+View(DanishWelfare)
+help("DanishWelfare")
+str(DanishWelfare)
+
+sum(DanishWelfare$Freq)
+```
+
+
+c. Convert this data frame to table form, DanishWelfare.tab, a 4-way array containing the frequencies with appropriate variable names and level names. 
+
+```{r}
+#contingency table 
+
+arrayD<-t(prop.table(ftable(Freq~Alcohol+ Income+ Status+ Urban, data = DanishWelfare))[2:5,])
+dimnames(arrayD) <- list(c('A','B','C','D','E','F'), c('Male', 'Female'))
+array
+
+DanishWelfare.tab <- xtabs(Freq ~., data = DanishWelfare)
+DanishWelfare.tab
+
+```
+
+
+e. Use structable () or ftable () to produce a pleasing flattened display of the frequencies in the 4-way table. Choose the variables used as row and column variables to make it easier to compare levels of Alcohol across the other factors. 
+
+```{r}
+ftable(DanishWelfare.tab)
+
+```
+
+4. p. 62 #2.5 a, b, c
+
+```{r}
+#code from text
+data("UKSoccer", package = "vcd") # specify data from pacakge
+ftable(UKSoccer)
+
+help("UKSoccer")
+```
+
+a. a. Verify that the total number of games represented in this table is 380. 
+
+```{r}
+sum(UKSoccer)
+
+```
+
+
+b. Find the marginal total of the number of goals scored by each of the home and away teams. 
+
+```{r}
+margin.table(UKSoccer, 1) #Home
+margin.table(UKSoccer, 2) # Away
+
+
+```
+
+c. Express each of the marginal totals as proportions. 
+
+```{r}
+# apply prop.table to marginal.table generated i question b. 
+prop.table(margin.table(UKSoccer, 1)) 
+
+prop.table(margin.table(UKSoccer, 2))
+
+```
+

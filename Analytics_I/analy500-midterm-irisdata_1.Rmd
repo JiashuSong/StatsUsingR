@@ -1,0 +1,55 @@
+---
+title: "analytics500_midterm_code"
+author: "Jiashu Song"
+date: "2/22/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+1) Understanding the Data:
+
+The structure of the data and a preview of the data.
+Frequency Distribution. (Frequency Tables & Plots for each variable in the dataset (Barplots/Histograms)). Make sure to capture the skewness and kurtosis. - Provide an interpretation in one paragraph  (no more than 300 words) explaining the distribution of the data. 
+Summary Statistics of the Data at least including mean, quartiles, min/max, and standard deviation. 
+
+```{r iris}
+library(moments)
+library(plyr)
+
+df = read.csv('iris_exams.csv', header = TRUE)
+ls(df)
+head(df)
+```
+
+##plot
+
+```{r }
+par(mfrow = c(2,2))
+hist(df$Petal.Length,breaks = 25, xlab ='Petal Length')
+hist(df$Petal.Width, breaks = 25, xlab ='Petal Width')
+hist(df$Sepal.Length,breaks = 25, xlab ='Sepal Length')
+hist(df$Sepal.Width, breaks = 50, xlab ='Sepal Width')
+mean(df$Sepal.Width)
+skewness(df$Sepal.Width)
+kurtosis(df$Sepal.Width)
+levels(df$Species)
+
+#df_setosa = subset(data_iris, data_iris$Species == 'setosa')
+#hist(df_setosa$Petal.Length)
+
+```
+answer: use the sepal width plot as example, the distribution shows slight positively skewness( 0.5065), kurtosisi is larger than 3 ( 3.2987). This histgram includes all three species sepal width distributions. Could dig more with group barplot with colored speices for further analysis. 
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+summary(df)
+
+```
+

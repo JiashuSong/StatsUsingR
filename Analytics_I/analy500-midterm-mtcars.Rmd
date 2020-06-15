@@ -1,0 +1,108 @@
+---
+title: "Analy500 midterm-q21"
+author: "Jiashu Song"
+date: "2/22/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Using the mtcars dataset, demonstrate the skills you have learned so far in class and submit a Rmarkdown (word doc) report including the following:
+
+Develop a hypothesis
+1, What is your hypothesis?
+2, What columns are IVs
+3, What columns are DVs
+4, What columns are ignoble (why)
+5, Check for Errors & Missing Data, How did you deal with NAs
+6, Clean the data, How did you deal with outliers
+7, Check Assumptions using Parametric Tests
+Additivity 
+Linearity
+Normality
+Homogeneity, Homoscedasticity
+
+```{r cars}
+df = datasets::mtcars
+dimnames(df)
+summary(df)
+head(df)
+?mtcars
+```
+1,my hypothesis:
+H0: car's mpg does not affected by car's transmission type
+H1: car's mpg affected by its transmission type. 
+
+2, IVs:
+am ,cyl, disp, hp, drat, wt, vs, gear
+3, DVs:
+mpg
+
+4, My hypothesis only include mpg and am, so other IVs can be ignored. 
+
+5, sanity checking:
+There is no missing data in these two columns. However, if we do have missing data in the dataset:
+remove the row with missing data or replace by mean dpending on the data size and percentage of the missing data. 
+
+6, For the outlier: 
+We can replace the outlier by medium of original dataset, or replace the outlier by mean of dataset after removing the outliers. 
+
+```{r}
+dfsub =df[myvars <- c("mpg", "am")]
+dfsub
+
+# data sanity check 
+dfsub[!complete.cases(dfsub),]
+is.na(dfsub) # no missing value 
+
+am = dfsub$am
+mpg = dfsub$mpg
+boxplot(mpg ~ am)
+
+mpg.manu = dfsub[dfsub$am==1,]$mpg
+mpg.auto = dfsub[dfsub$am==0,]$mpg
+
+hist(mpg, breaks = 20,main ='hist of MPG', xlab = 'Miles/Gallen', col ='blue')
+
+
+#library(car)
+#scatterplot(am,mpg, col= 'blue')
+
+```
+
+
+## Including Plots
+
+
+```{r parameter testing, echo=FALSE}
+t.test(mpg.auto, mpg.manu)
+
+```
+7, by the t testing, the p-value is less than 0.05, and 0 does not fall in the confidence level. So the test hypothesis is false and can be rejected. It means the there is significant different impacts between two types of transmission on mpg. 
+
+I also did the hypothesis testing between tranmission types and 1/4 mile time. For this testing, P value > 0.05. So the hypothesis is true. There is no significant different impact between two types of transmission on qsec. 
+
+```{r try another hypothesis betwen qsec and am }
+dfsub2 =df[myvars <- c("qsec", "am")]
+dfsub2
+
+# data sanity check 
+dfsub2[!complete.cases(dfsub2),]
+is.na(dfsub2) # no missing value 
+
+am = dfsub2$am
+qsec = dfsub2$qsec
+
+qsec.manu = dfsub2[dfsub2$am==1,]$qsec
+qsec.auto = dfsub2[dfsub2$am==0,]$qsec
+
+hist(qsec, breaks = 20, xlab = '1/4 mile time', col = 'blue')
+
+t.test(qsec.auto, qsec.manu)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
